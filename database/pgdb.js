@@ -45,5 +45,20 @@ module.exports = pool => ({
         [ids]
       )
       .then(({ rows }) => orderedFor(rows, ids, "contest_id", true));
+  },
+  getVotesByNames(names) {
+    return pool
+      .query(
+        ` 
+        select * from votes
+        where name_id = ANY($1)
+        `,
+        [names]
+      )
+      .then(({ rows }) => {
+        const r = orderedFor(rows, names, "name_id", true)
+        console.log(r)
+        return r;
+      });
   }
 });

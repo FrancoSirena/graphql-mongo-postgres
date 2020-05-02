@@ -26,7 +26,8 @@ MongoClient.connect(mongo.url, { useUnifiedTopology: true }, (err, client) => {
         usersById: new DataLoader(pgCon.getUsersByIds),
         contestByIds: new DataLoader(pgCon.getContestsByIds),
         namesByIds: new DataLoader(pgCon.getNamesByIds),
-        usersByApiKeys: new DataLoader(pgCon.getUsersByApiKeys)
+        usersByApiKeys: new DataLoader(pgCon.getUsersByApiKeys),
+        totalVotesByName: new DataLoader(pgCon.getVotesByNames)
       },
       mongo: {
         usersByIds: new DataLoader(mongoCon.getUsersByIds)

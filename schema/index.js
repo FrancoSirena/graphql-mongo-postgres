@@ -8,8 +8,14 @@ const {
   GraphQLEnumType,
   GraphQLInt
 } = require("graphql");
-const pgdb = require("../database/pgdb");
-const mongodb = require("../database/mongodb");
+
+const VotesType = new GraphQLObjectType({
+  name: "votes",
+  fields: () => ({
+    down: { type: GraphQLInt },
+    up: { type: GraphQLInt }
+  })
+});
 
 const StatusType = new GraphQLEnumType({
   name: "status",
@@ -31,6 +37,14 @@ const NamesType = new GraphQLObjectType({
       type: new GraphQLNonNull(UserType),
       resolve: (name, _, { loaders }) =>
         loaders.pg.usersById.load(name.createdBy)
+    },
+    votes: {
+      type: VotesType,
+      resolve: (name, _, { loaders }) =>
+        loaders.pg.totalVotesByName.load(name.id).then(res => ({
+          up: res.reduce((acc, r) => acc + (r.up ? 1 : 0), 0),
+          down: res.reduce((acc, r) => acc + (!r.up ? 1 : 0), 0)
+        }))
     }
   })
 });
