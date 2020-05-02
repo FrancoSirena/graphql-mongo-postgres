@@ -1,11 +1,13 @@
 {
   "name": "graphql-franco",
   "version": "1.0.0",
+  "homepage": "./",
   "description": "Postgres + Mongo + Node project",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon index.js"
+    "watch": "nodemon index.js",
+    "start": "node index.js"
   },
   "keywords": [
     "nodejs",

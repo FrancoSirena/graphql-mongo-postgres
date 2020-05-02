@@ -1,0 +1,16 @@
+
+postgresdb:
+  build: ./docker/postgres/
+  restart: always
+  volumes:
+    - /data/pg:/var/lib/postgresql/data
+  ports:
+  - "5432:5432"
+mongodb:
+  build: ./docker/mongodb/
+  restart: always
+  volumes:
+    - ./data/mongo:/data/db
+  ports:
+  - "27017:27017"
+

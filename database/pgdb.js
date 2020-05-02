@@ -1,6 +1,7 @@
-const camelizeObject = require("../camelizeObject");
+const camelizeObject = require("../helpers/camelizeObject");
+const { slugify } = require("../helpers/stringFormat");
+
 const orderedFor = require("./orderedFor");
-const { slugify } = require("../stringFormat");
 
 module.exports = pool => ({
   getUsersByIds(ids) {

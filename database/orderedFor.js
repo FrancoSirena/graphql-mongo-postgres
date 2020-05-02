@@ -1,5 +1,5 @@
 const assert = require("assert");
-const camelizeObject = require("../camelizeObject");
+const camelizeObject = require("../helpers/camelizeObject");
 
 const orderedFor = (rows, args, field, multiple) => {
   const rowsBy = new Map();
