@@ -2,12 +2,15 @@ const assert = require("assert");
 const camelizeObject = require("../camelizeObject");
 
 const orderedFor = (rows, args, field, multiple) => {
-  const rowsBy = new Map(rows.map(row => [row[field], row]));
+  const rowsBy = new Map();
+  rows.forEach(row => {
+    rowsBy.set(row[field], (rowsBy.get(row[field]) || []).concat(row));
+  });
   return args.map(value => {
     if (multiple) {
-      return (rowBy.get(value) || []).map(camelizeObject)
+      return (rowsBy.get(value) || []).map(camelizeObject)
     }
-    return camelizeObject(rowsBy.get(value) || {})
+    return camelizeObject(rowsBy.get(value)[0] || {})
   });
 };
 

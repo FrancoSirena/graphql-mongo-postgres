@@ -11,18 +11,6 @@ const {
 const pgdb = require("../database/pgdb");
 const mongodb = require("../database/mongodb");
 
-// /**
-//  * Ok Solution for such a case
-//  * @param {Object} type GraphQLType
-//  * @returns {Object}
-//  */
-// const fromSnakeCase = type => ({
-//   type,
-//   resolve: (obj, a, c, { fieldName }) => {
-//     return obj[snakeCase(fieldName)]
-//   }
-// });
-
 const StatusType = new GraphQLEnumType({
   name: "status",
   values: {
@@ -41,7 +29,7 @@ const NamesType = new GraphQLObjectType({
     createdAt: { type: new GraphQLNonNull(GraphQLString) },
     createdBy: {
       type: new GraphQLNonNull(UserType),
-      resolve: (name, _, { pg }) => pgdb(pg).getUserById(name.createdBy)
+      resolve: (name, _, { loaders }) =>  loaders.usersById.load(name.createdBy)
     }
   })
 });
@@ -60,7 +48,7 @@ const ContestsType = new GraphQLObjectType({
     description: { type: GraphQLString },
     names: {
       type: new GraphQLList(NamesType),
-      resolve: (contest, _, { pg }) => pgdb(pg).getNames(contest)
+      resolve: (contest, _, { loaders }) => loaders.namesByIds.load(contest.id)
     }
   }
 });
@@ -82,7 +70,7 @@ const UserType = new GraphQLObjectType({
     email: { type: new GraphQLNonNull(GraphQLString) },
     contests: {
       type: new GraphQLList(ContestsType),
-      resolve: (user, _, { pg }) => pgdb(pg).getContests(user)
+      resolve: (user, _, { loaders }) => loaders.contestByIds.load(user.id)
     },
     contestsCount: {
       type: GraphQLInt,
@@ -113,9 +101,7 @@ const RootQueryType = new GraphQLObjectType({
           type: new GraphQLNonNull(GraphQLString)
         }
       },
-      resolve: (_, { key }, { pg }) => {
-        return pgdb(pg).getUser(key);
-      }
+      resolve: (_, { key }, { loaders }) => loaders.usersByApiKeys.load(key)
     }
   }
 });

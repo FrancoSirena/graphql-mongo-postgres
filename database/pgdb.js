@@ -1,5 +1,5 @@
 const camelizeObject = require("../camelizeObject");
-const orderedFor = require('./orderedFor');
+const orderedFor = require("./orderedFor");
 
 module.exports = pool => ({
   getUsersByIds(ids) {
@@ -11,9 +11,9 @@ module.exports = pool => ({
       `,
         [ids]
       )
-      .then(({ rows }) => orderedFor(rows, ids, 'id'));
+      .then(({ rows }) => orderedFor(rows, ids, "id"));
   },
-  getUsers(keys) {
+  getUsersByApiKeys(keys) {
     return pool
       .query(
         `
@@ -22,7 +22,7 @@ module.exports = pool => ({
     `,
         [keys]
       )
-      .then(({ rows }) => orderedFor(rows, keys, 'api_key')); 
+      .then(({ rows }) => orderedFor(rows, keys, "api_key"));
   },
   getContestsByIds(ids) {
     return pool
@@ -33,51 +33,17 @@ module.exports = pool => ({
     `,
         [ids]
       )
-      .then(({ rows }) => orderedFor(rows, ids, 'created_by', true));
+      .then(({ rows }) => orderedFor(rows, ids, "created_by", true));
   },
-
-  getUser(key) {
-    return pool
-      .query(
-        `
-      select * from users
-      where api_key = $1
-    `,
-        [key]
-      )
-      .then(({ rows: [row] }) => camelizeObject(row));
-  },
-  getUserById(key) {
-    return pool
-      .query(
-        `
-      select * from users
-      where id = $1
-    `,
-        [key]
-      )
-      .then(({ rows: [row] }) => camelizeObject(row));
-  },
-  getContests(user) {
-    return pool
-      .query(
-        `
-      select * from contests
-      where created_by = $1
-    `,
-        [user.id]
-      )
-      .then(({ rows }) => rows.map(camelizeObject));
-  },
-  getNames(contest) {
+  getNamesByIds(ids) {
     return pool
       .query(
         `
       select * from names
-      where contest_id = $1
-    `,
-        [contest.id]
+      where contest_id = ANY($1)
+      `,
+        [ids]
       )
-      .then(({ rows }) => rows.map(camelizeObject));
+      .then(({ rows }) => orderedFor(rows, ids, "contest_id", true));
   }
 });
