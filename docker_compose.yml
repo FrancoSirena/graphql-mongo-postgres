@@ -1,0 +1,21 @@
+
+postgresdb:
+  image: postgres
+  restart: always
+  volumes:
+    - ./data/pg:/var/lib/postgresql/data
+    - ./database:/mnt/data
+  command: ["postgres", "-c", "log_statement=all"]
+  environment:
+    POSTGRES_PASSWORD: dummy 
+  ports:
+  - "5432:5432"
+mongodb:
+  image: mongo
+  restart: always
+  volumes:
+    - ./data/mongo:/data/db
+    - ./database:/mnt/data
+  ports:
+  - "27017:27017"
+

@@ -1,0 +1,26 @@
+{
+  "name": "graphql-franco",
+  "version": "1.0.0",
+  "description": "Postgres + Mongo + Node project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "nodemon index.js"
+  },
+  "keywords": [
+    "nodejs",
+    "mongodb",
+    "postgres"
+  ],
+  "author": "Franco Sirena",
+  "license": "ISC",
+  "dependencies": {
+    "dataloader": "^2.0.0",
+    "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "graphql": "^15.0.0",
+    "mongodb": "^3.5.7",
+    "nodemon": "^2.0.3",
+    "pg": "^8.0.3"
+  }
+}
