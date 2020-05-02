@@ -6,8 +6,11 @@ const {
   GraphQLID,
   GraphQLList,
   GraphQLEnumType,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLInputObjectType,
+  GraphQLUnionType
 } = require("graphql");
+const pgdb = require("../database/pgdb");
 
 const VotesType = new GraphQLObjectType({
   name: "votes",
@@ -41,10 +44,7 @@ const NamesType = new GraphQLObjectType({
     votes: {
       type: VotesType,
       resolve: (name, _, { loaders }) =>
-        loaders.pg.totalVotesByName.load(name.id).then(res => ({
-          up: res.reduce((acc, r) => acc + (r.up ? 1 : 0), 0),
-          down: res.reduce((acc, r) => acc + (!r.up ? 1 : 0), 0)
-        }))
+        loaders.pg.totalVotesByName.load(name.id)
     }
   })
 });
@@ -66,6 +66,14 @@ const ContestsType = new GraphQLObjectType({
       resolve: (contest, _, { loaders }) =>
         loaders.pg.namesByIds.load(contest.id)
     }
+  }
+});
+
+const ActivityType = new GraphQLUnionType({
+  name: "Activity",
+  types: [ContestsType, NamesType],
+  resolveType(value) {
+    return value.type === "contests" ? ContestsType : NamesType;
   }
 });
 
@@ -108,12 +116,17 @@ const UserType = new GraphQLObjectType({
         loaders.mongo.usersByIds
           .load(user.id)
           .then(({ [fieldName]: result }) => result)
+    },
+    activities: {
+      type: new GraphQLList(ActivityType),
+      resolve: (user, _, { loaders }) =>
+        loaders.pg.activitiesForUsersIds.load(user.id)
     }
   }
 });
 
 const RootQueryType = new GraphQLObjectType({
-  name: "start",
+  name: "root_query",
   fields: {
     me: {
       type: UserType,
@@ -128,8 +141,52 @@ const RootQueryType = new GraphQLObjectType({
   }
 });
 
+const ContestInput = new GraphQLInputObjectType({
+  name: "ContestInput",
+  fields: {
+    apiKey: { type: new GraphQLNonNull(GraphQLString) },
+    title: { type: new GraphQLNonNull(GraphQLString) },
+    description: { type: GraphQLString }
+  }
+});
+
+const NamesInput = new GraphQLInputObjectType({
+  name: "NamesInput",
+  fields: {
+    apiKey: { type: new GraphQLNonNull(GraphQLString) },
+    label: { type: new GraphQLNonNull(GraphQLString) },
+    contestId: { type: new GraphQLNonNull(GraphQLInt) },
+    description: { type: GraphQLString }
+  }
+});
+
+const AddContest = {
+  type: ContestsType,
+  args: {
+    input: { type: new GraphQLNonNull(ContestInput) }
+  },
+  resolve: (_, { input }, { pgPool }) => pgdb(pgPool).addContest(input)
+};
+
+const AddName = {
+  type: NamesType,
+  args: {
+    input: { type: new GraphQLNonNull(NamesInput) }
+  },
+  resolve: (_, { input }, { pgPool }) => pgdb(pgPool).addName(input)
+};
+
+const RootMutationType = new GraphQLObjectType({
+  name: "root_mutation",
+  fields: () => ({
+    AddContest,
+    AddName
+  })
+});
+
 const schema = new GraphQLSchema({
-  query: RootQueryType
+  query: RootQueryType,
+  mutation: RootMutationType
 });
 
 module.exports = schema;

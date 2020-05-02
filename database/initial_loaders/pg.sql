@@ -45,6 +45,8 @@ create table votes (
     unique(name_id, created_by)
 );
 
+create view total_votes_by_count AS SELECT names.id name_id, SUM(CASE WHEN up=true THEN 1 ELSE 0 END) up, SUM(CASE WHEN up=false THEN 1 ELSE 0 END) down from names LEFT JOIN votes ON votes.name_id = names.id GROUP BY names.id;
+
 INSERT INTO "users" ("email","first_name","last_name","api_key")
 VALUES
 (E'samer@agilelabs.com',E'Samer',E'Buna',E'4242'),

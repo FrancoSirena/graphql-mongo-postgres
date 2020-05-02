@@ -1,5 +1,6 @@
 const camelizeObject = require("../camelizeObject");
 const orderedFor = require("./orderedFor");
+const { slugify } = require("../stringFormat");
 
 module.exports = pool => ({
   getUsersByIds(ids) {
@@ -46,19 +47,56 @@ module.exports = pool => ({
       )
       .then(({ rows }) => orderedFor(rows, ids, "contest_id", true));
   },
-  getVotesByNames(names) {
+  getTotalVotesByNames(names) {
     return pool
       .query(
         ` 
-        select * from votes
+        select * from total_votes_by_count
         where name_id = ANY($1)
         `,
         [names]
       )
-      .then(({ rows }) => {
-        const r = orderedFor(rows, names, "name_id", true)
-        console.log(r)
-        return r;
-      });
+      .then(({ rows }) => orderedFor(rows, names, "name_id"));
+  },
+  getActivitiesForUsersIds(ids) {
+    return pool.query(`
+      select created_at, created_by, label, '' as title, 'names' as type
+      from names
+      where created_by = ANY($1)
+      union
+      select created_at, created_by, '' as label, title, 'contests' as type
+      from contests
+      where created_by = ANY($1)
+    `, [ids]).then(({ rows }) => orderedFor(rows, ids, 'created_by', true))
+  },
+  addContest({ apiKey, title, description }) {
+    return pool
+      .query(
+        `
+      insert into contests(code, title, description, created_by)
+      values ($1, $2, $3, (select id from users where api_key = $4))
+      returning *
+    `,
+        [slugify(title), title, description, apiKey]
+      )
+      .then(({ rows: [row] }) => camelizeObject(row));
+  },
+  addName({ apiKey, label, contestId, description }) {
+    return pool
+      .query(
+        `
+      insert into names(contest_id, label, normalized_label, description, created_by)
+      values ($1, $2, $3, $4, (select id from users where api_key = $5))
+      returning *
+    `,
+        [
+          contestId,
+          label,
+          label.toLowerCase().replace(/[\s]+/g, ""),
+          description,
+          apiKey
+        ]
+      )
+      .then(({ rows: [row] }) => camelizeObject(row));
   }
 });

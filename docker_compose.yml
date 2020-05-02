@@ -6,8 +6,6 @@ postgresdb:
     - ./data/pg:/var/lib/postgresql/data
     - ./database:/mnt/data
   command: ["postgres", "-c", "log_statement=all"]
-  environment:
-    POSTGRES_PASSWORD: dummy 
   ports:
   - "5432:5432"
 mongodb:

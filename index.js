@@ -27,7 +27,8 @@ MongoClient.connect(mongo.url, { useUnifiedTopology: true }, (err, client) => {
         contestByIds: new DataLoader(pgCon.getContestsByIds),
         namesByIds: new DataLoader(pgCon.getNamesByIds),
         usersByApiKeys: new DataLoader(pgCon.getUsersByApiKeys),
-        totalVotesByName: new DataLoader(pgCon.getVotesByNames)
+        totalVotesByName: new DataLoader(pgCon.getTotalVotesByNames),
+        activitiesForUsersIds: new DataLoader(pgCon.getActivitiesForUsersIds)
       },
       mongo: {
         usersByIds: new DataLoader(mongoCon.getUsersByIds)
@@ -37,7 +38,8 @@ MongoClient.connect(mongo.url, { useUnifiedTopology: true }, (err, client) => {
       schema,
       graphiql: true,
       context: {
-        loaders
+        loaders,
+        pgPool,
       }
     })(request, response);
   });
