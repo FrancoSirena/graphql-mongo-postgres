@@ -1,34 +1,41 @@
-const app = require("express")();
 const assert = require("assert");
+const app = require("express")();
+const graphqlHTTP = require("express-graphql");
 const DataLoader = require("dataloader");
 const { nodeEnv } = require("./util");
-const schema = require("./schema/index");
-const graphqlHTTP = require("express-graphql");
+
 const pg = require("pg");
 const pgdb = require("./database/pgdb");
-const { MongoClient } = require("mongodb");
-const mongo = require("./config/mongo")[nodeEnv];
 const pgConfig = require("./config/pg")[nodeEnv];
-const pgPool = new pg.Pool(pgConfig);
 
-let mongoPool;
+const { MongoClient } = require("mongodb");
+const mongodb = require("./database/mongodb");
+const mongo = require("./config/mongo")[nodeEnv];
+
+const schema = require("./schema/index");
+
 MongoClient.connect(mongo.url, { useUnifiedTopology: true }, (err, client) => {
   assert.equal(err, null);
-  mongoPool = client.db("contests");
+  const pgPool = new pg.Pool(pgConfig);
+  const mongoPool = client.db("contests");
   app.use("/graphql", (request, response) => {
-    const con = pgdb(pgPool);
+    const pgCon = pgdb(pgPool);
+    const mongoCon = mongodb(mongoPool);
     const loaders = {
-      usersById: new DataLoader(con.getUsersByIds),
-      contestByIds: new DataLoader(con.getContestsByIds),
-      namesByIds: new DataLoader(con.getNamesByIds),
-      usersByApiKeys: new DataLoader(con.getUsersByApiKeys)
+      pg: {
+        usersById: new DataLoader(pgCon.getUsersByIds),
+        contestByIds: new DataLoader(pgCon.getContestsByIds),
+        namesByIds: new DataLoader(pgCon.getNamesByIds),
+        usersByApiKeys: new DataLoader(pgCon.getUsersByApiKeys)
+      },
+      mongo: {
+        usersByIds: new DataLoader(mongoCon.getUsersByIds)
+      }
     };
     graphqlHTTP({
       schema,
       graphiql: true,
       context: {
-        pg: pgPool,
-        mongo: mongoPool,
         loaders
       }
     })(request, response);

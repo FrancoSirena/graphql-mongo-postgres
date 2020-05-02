@@ -29,7 +29,8 @@ const NamesType = new GraphQLObjectType({
     createdAt: { type: new GraphQLNonNull(GraphQLString) },
     createdBy: {
       type: new GraphQLNonNull(UserType),
-      resolve: (name, _, { loaders }) =>  loaders.usersById.load(name.createdBy)
+      resolve: (name, _, { loaders }) =>
+        loaders.pg.usersById.load(name.createdBy)
     }
   })
 });
@@ -48,7 +49,8 @@ const ContestsType = new GraphQLObjectType({
     description: { type: GraphQLString },
     names: {
       type: new GraphQLList(NamesType),
-      resolve: (contest, _, { loaders }) => loaders.namesByIds.load(contest.id)
+      resolve: (contest, _, { loaders }) =>
+        loaders.pg.namesByIds.load(contest.id)
     }
   }
 });
@@ -70,22 +72,28 @@ const UserType = new GraphQLObjectType({
     email: { type: new GraphQLNonNull(GraphQLString) },
     contests: {
       type: new GraphQLList(ContestsType),
-      resolve: (user, _, { loaders }) => loaders.contestByIds.load(user.id)
+      resolve: (user, _, { loaders }) => loaders.pg.contestByIds.load(user.id)
     },
     contestsCount: {
       type: GraphQLInt,
-      resolve: (user, _, { mongo }, { fieldName }) =>
-        mongodb(mongo).getCounts(user, fieldName)
+      resolve: (user, _, { loaders }, { fieldName }) =>
+        loaders.mongo.usersByIds
+          .load(user.id)
+          .then(({ [fieldName]: result }) => result)
     },
     namesCount: {
       type: GraphQLInt,
-      resolve: (user, _, { mongo }, { fieldName }) =>
-        mongodb(mongo).getCounts(user, fieldName)
+      resolve: (user, _, { loaders }, { fieldName }) =>
+        loaders.mongo.usersByIds
+          .load(user.id)
+          .then(({ [fieldName]: result }) => result)
     },
     votesCount: {
       type: GraphQLInt,
-      resolve: (user, _, { mongo }, { fieldName }) =>
-        mongodb(mongo).getCounts(user, fieldName)
+      resolve: (user, _, { loaders }, { fieldName }) =>
+        loaders.mongo.usersByIds
+          .load(user.id)
+          .then(({ [fieldName]: result }) => result)
     }
   }
 });
@@ -101,7 +109,7 @@ const RootQueryType = new GraphQLObjectType({
           type: new GraphQLNonNull(GraphQLString)
         }
       },
-      resolve: (_, { key }, { loaders }) => loaders.usersByApiKeys.load(key)
+      resolve: (_, { key }, { loaders }) => loaders.pg.usersByApiKeys.load(key)
     }
   }
 });

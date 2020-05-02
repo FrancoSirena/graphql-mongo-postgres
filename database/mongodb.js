@@ -1,8 +1,11 @@
+const orderedFor = require('./orderedFor');
+
 module.exports = pool => ({
-  getCounts(user, field) {
+  getUsersByIds(ids) {
     return pool
       .collection("users")
-      .findOne({ userId: user.id })
-      .then(({ [field]: result }) => result);
+      .find({ userId: { $in: ids } })
+      .toArray()
+      .then(rows =>  orderedFor(rows, ids, 'userId'));
   }
 });
